@@ -35,14 +35,14 @@ def test_cbor_dicts_arrays():
     #print('array after round-trip:', cbor2.loads(person2_array_cbor))
 
     # CBOR dict vs CDDL dict
-    assert cddlcat.validate_cbor_bytes(cddl_spec, 'person', person2_dict_cbor)
+    assert cddlcat.validate_cbor_bytes('person', cddl_spec, person2_dict_cbor)
     # CBOR array vs CDDL dict
-    assert not cddlcat.validate_cbor_bytes(cddl_spec, 'person', person2_array_cbor)
+    assert not cddlcat.validate_cbor_bytes('person', cddl_spec, person2_array_cbor)
 
     # CBOR dict vs CDDL array
-    assert not cddlcat.validate_cbor_bytes(cddl_spec, 'person_array', person2_dict_cbor)
+    assert not cddlcat.validate_cbor_bytes('person_array', cddl_spec, person2_dict_cbor)
     # CBOR dict vs CDDL array
-    assert cddlcat.validate_cbor_bytes(cddl_spec, 'person_array', person2_array_cbor)
+    assert cddlcat.validate_cbor_bytes('person_array', cddl_spec, person2_array_cbor)
 
 def test_bad_arrays():
     cddl_spec = '''person = {
@@ -71,7 +71,7 @@ def test_bad_arrays():
 
     for index, bad_array in enumerate(bad_arrays):
         bad_cbor = cbor2.dumps(bad_array)
-        assert not cddlcat.validate_cbor_bytes(cddl_spec, 'person_array', bad_cbor)
+        assert not cddlcat.validate_cbor_bytes('person_array', cddl_spec, bad_cbor)
 
 test_cbor_dicts_arrays()
 test_bad_arrays()
