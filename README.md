@@ -1,6 +1,8 @@
 
 ## `cddlcat` for Python
 
+This builds a python module granting access to the [`cddl-cat`] crate.
+
 The nightly version of rust is required.  This is because `pyo3` requires it.
 
 To "install", copy `target/release/libcddlcat.so` to some place in your python `sys.path`, and rename it to `cddlcat.so`.
@@ -13,3 +15,5 @@ TODO list:
   - `flatten_from_str`
   - `BasicContext::new`
   - `Context.rules.get(rule_name)`
+
+[`cddl-cat`]: https://crates.io/crates/cddl-cat
