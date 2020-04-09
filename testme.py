@@ -2,77 +2,90 @@
 
 import cddlcat
 import cbor2
+import json
+import unittest
 
-def test_cbor_dicts_arrays():
-    cddl_spec = '''person = {
-      age: int,
-      name: tstr,
-      employer: tstr,
-    }
+class TestCddlcat(unittest.TestCase):
+    def test_dicts_arrays(self):
+        cddl_spec = '''person = {
+          age: int,
+          name: tstr,
+          employer: tstr,
+        }
 
-    person_array = [
-      xage: int,
-      xname: tstr,
-      xemployer: tstr,
-    ]'''
+        person_array = [
+          xage: int,
+          xname: tstr,
+          xemployer: tstr,
+        ]'''
 
-    person2_dict = {
-        'age': 70,
-        'name': 'Bill Gates',
-        'employer': 'Microsoft',
-    }
+        person2_dict = {
+            'age': 70,
+            'name': 'Bill Gates',
+            'employer': 'Microsoft',
+        }
 
-    person2_array = [
-        70,
-        'Bill Gates',
-        'Microsoft',
-    ]
+        person2_array = [
+            70,
+            'Bill Gates',
+            'Microsoft',
+        ]
 
-    person2_dict_cbor = cbor2.dumps(person2_dict)
-    person2_array_cbor = cbor2.dumps(person2_array)
+        tools = [
+            (cbor2.dumps, cddlcat.validate_cbor_bytes),
+            (json.dumps, cddlcat.validate_json_str),
+        ]
 
-    #print('dict after round-trip:', cbor2.loads(person2_dict_cbor))
-    #print('array after round-trip:', cbor2.loads(person2_array_cbor))
+        for encode, validate in tools:
+            print("test validator", validate.__name__)
+            encoded_dict = encode(person2_dict)
+            encoded_array = encode(person2_array)
 
-    # CBOR dict vs CDDL dict
-    assert cddlcat.validate_cbor_bytes('person', cddl_spec, person2_dict_cbor)
-    # CBOR array vs CDDL dict
-    assert not cddlcat.validate_cbor_bytes('person', cddl_spec, person2_array_cbor)
+            #print('dict after round-trip:', cbor2.loads(encoded_dict))
+            #print('array after round-trip:', cbor2.loads(encoded_array))
 
-    # CBOR dict vs CDDL array
-    assert not cddlcat.validate_cbor_bytes('person_array', cddl_spec, person2_dict_cbor)
-    # CBOR dict vs CDDL array
-    assert cddlcat.validate_cbor_bytes('person_array', cddl_spec, person2_array_cbor)
+            # CBOR dict vs CDDL dict
+            self.assertEqual(None, validate('person', cddl_spec, encoded_dict))
+            # CBOR array vs CDDL dict
+            with self.assertRaises(Exception):
+                validate('person', cddl_spec, encoded_array)
 
-def test_bad_arrays():
-    cddl_spec = '''person = {
-      age: int,
-      name: tstr,
-      employer: tstr,
-    }
+            # CBOR dict vs CDDL array
+            with self.assertRaises(Exception):
+                validate('person_array', cddl_spec, encoded_dict)
+            # CBOR dict vs CDDL array
+            assert None == validate('person_array', cddl_spec, encoded_array)
 
-    person_array = [
-      xage: int,
-      xname: tstr,
-      xemployer: tstr,
-    ]'''
+    def test_bad_arrays(self):
+        cddl_spec = '''person = {
+          age: int,
+          name: tstr,
+          employer: tstr,
+        }
 
-    bad_arrays = [
-        [123, 'foo','bar', 456],
-        [123, 'foo'],
-        [123],
-        [],
-        ['abc'],
-        ['abc', 123],
-        [123, 'foo', 456],
-        [123, ['foo', 'bar']],
-        [123, ['foo'], 'bar'],
-    ]
+        person_array = [
+          xage: int,
+          xname: tstr,
+          xemployer: tstr,
+        ]'''
 
-    for index, bad_array in enumerate(bad_arrays):
-        bad_cbor = cbor2.dumps(bad_array)
-        assert not cddlcat.validate_cbor_bytes('person_array', cddl_spec, bad_cbor)
+        bad_arrays = [
+            [123, 'foo','bar', 456],
+            [123, 'foo'],
+            [123],
+            [],
+            ['abc'],
+            ['abc', 123],
+            [123, 'foo', 456],
+            [123, ['foo', 'bar']],
+            [123, ['foo'], 'bar'],
+        ]
 
-test_cbor_dicts_arrays()
-test_bad_arrays()
-print("done!")
+        for index, bad_array in enumerate(bad_arrays):
+            bad_cbor = cbor2.dumps(bad_array)
+            with self.assertRaises(Exception):
+                cddlcat.validate_cbor_bytes('person_array', cddl_spec, bad_cbor)
+
+
+if __name__ == '__main__':
+    unittest.main()
