@@ -6,6 +6,25 @@ import json
 import unittest
 
 class TestCddlcat(unittest.TestCase):
+    def test_parsing(self):
+        cddl = '''some_literal = 123.0
+        person = {
+          age: int,
+          name: tstr,
+          employer: tstr,
+        }'''
+        ivt = cddlcat.flatten_from_str(cddl)
+
+        lit_node = ivt['some_literal']
+        assert(lit_node.kind() == 'Literal')
+        assert(type(lit_node.value()) == float)
+
+        person_node = ivt['person']
+        assert(person_node.kind() == 'Map')
+        rebuild = [ kv.kv() for kv in person_node ]
+        rebuild = { k.value(): v.value() for k,v in rebuild }
+        assert rebuild == {'age': 'Int', 'name': 'Tstr', 'employer': 'Tstr'}
+
     def test_dicts_arrays(self):
         cddl_spec = '''person = {
           age: int,
