@@ -18,6 +18,6 @@ crate-type = ["cdylib"]
 version = "0.3.0"
 #path = "../cddl-cat"
 
-[dependencies.cpython]
-version = "0.5"
+[dependencies.pyo3]
+version = "0.9.1"
 features = ["extension-module"]

@@ -1,43 +1,30 @@
-use cpython::{
-    py_exception, py_fn, py_module_initializer, PyResult, Python, PyObject
-};
+use pyo3::prelude::*;
+use pyo3::{create_exception, wrap_pyfunction};
 
-py_module_initializer!(cddlcat, |py, m| {
-    m.add(py, "__doc__", "This module is implemented in Rust.")?;
-    m.add(
-        py,
-        "validate_cbor_bytes",
-        py_fn!(
-            py,
-            validate_cbor_bytes(typename: &str, cddl: &str, cbor: &[u8])
-        ),
-    )?;
-    m.add(
-        py,
-        "validate_json_str",
-        py_fn!(
-            py,
-            validate_json_str(typename: &str, cddl: &str, json: &str)
-        ),
-    )?;
-    // FIXME: ValidateError doesn't appear in the python module.  How do I add it?
+#[pymodule]
+fn cddlcat(_py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_wrapped(wrap_pyfunction!(validate_cbor_bytes))
+        .unwrap();
+    m.add_wrapped(wrap_pyfunction!(validate_json_str)).unwrap();
     Ok(())
-});
+}
 
-/// Validate a JSON string against a CDDL type specification.
-fn validate_cbor_bytes(py: Python, typename: &str, cddl: &str, cbor: &[u8]) -> PyResult<PyObject> {
-    cddl_cat::validate_cbor_bytes(typename, cddl, cbor).map_err(|e| {
-        ValidateError::new(py, format!("{}", e))
-    })?;
-    Ok(py.None())
+create_exception!(cddlcat, ValidateError, pyo3::exceptions::Exception);
+
+fn err_adapter(err: cddl_cat::util::ValidateError) -> PyErr {
+    ValidateError::py_err(format!("{}", err))
 }
 
 /// Validate a JSON string against a CDDL type specification.
-fn validate_json_str(py: Python, typename: &str, cddl: &str, json: &str) -> PyResult<PyObject> {
-    cddl_cat::validate_json_str(typename, cddl, json).map_err(|e| {
-        ValidateError::new(py, format!("{}", e))
-    })?;
-    Ok(py.None())
+#[pyfunction]
+fn validate_cbor_bytes(typename: &str, cddl: &str, cbor: &[u8]) -> PyResult<()> {
+    cddl_cat::validate_cbor_bytes(typename, cddl, cbor).map_err(err_adapter)?;
+    Ok(())
 }
 
-py_exception!(cddlcat, ValidateError);
+/// Validate a JSON string against a CDDL type specification.
+#[pyfunction]
+fn validate_json_str(typename: &str, cddl: &str, json: &str) -> PyResult<()> {
+    cddl_cat::validate_json_str(typename, cddl, json).map_err(err_adapter)?;
+    Ok(())
+}
