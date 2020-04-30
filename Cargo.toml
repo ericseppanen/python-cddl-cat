@@ -15,7 +15,7 @@ name = "cddlcat"
 crate-type = ["cdylib"]
 
 [dependencies.cddl-cat]
-version = "0.3.0"
+version = "0.3.2"
 #path = "../cddl-cat"
 
 [dependencies.pyo3]

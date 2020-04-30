@@ -1,7 +1,7 @@
 use cddl_cat::ivt::Node;
 use pyo3::exceptions::{AttributeError, IndexError};
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyDict, PyTuple};
 use pyo3::{
     create_exception, wrap_pyfunction, PyMappingProtocol, PyObjectProtocol, PySequenceProtocol,
 };
@@ -197,7 +197,7 @@ impl PyMappingProtocol for CDDLRules {
 // Parse CDDL text and return the IVT.
 #[pyfunction]
 fn flatten_from_str(cddl: &str) -> PyResult<Py<PyDict>> {
-    let result = cddl_cat::flatten::flatten_from_str(cddl).map_err(err_adapter)?;
+    let result = cddl_cat::flatten::slice_flatten_from_str(cddl).map_err(err_adapter)?;
 
     let gil = Python::acquire_gil();
     let py = gil.python();
@@ -205,8 +205,12 @@ fn flatten_from_str(cddl: &str) -> PyResult<Py<PyDict>> {
     let dict = PyDict::new(py);
     for (k, v) in result {
         let key = k.to_object(py);
-        let value: PyObject = IVTNode::from(v).into_py(py);
-        dict.set_item(key, value)?;
+        let (node, string) = v;
+        let node: PyObject = IVTNode::from(node).into_py(py);
+        let string: PyObject = string.into_py(py);
+        let tup_contents = vec![node, string];
+        let tup = PyTuple::new(py, tup_contents);
+        dict.set_item(key, tup)?;
     }
 
     Ok(dict.into())

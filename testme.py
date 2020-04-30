@@ -14,12 +14,20 @@ class TestCddlcat(unittest.TestCase):
           employer: tstr,
         }'''
         ivt = cddlcat.flatten_from_str(cddl)
+        for name, rule_etc in ivt.items():
+            #print('{} -> {}'.format(name, rule_etc))
+            assert type(name) is str
+            rule, string = rule_etc
+            assert type(rule) is cddlcat.IVTNode
+            assert type(string) is str
 
-        lit_node = ivt['some_literal']
+
+        lit_node, orig_txt = ivt['some_literal']
+        assert(orig_txt == 'some_literal = 123.0')
         assert(lit_node.kind() == 'Literal')
         assert(type(lit_node.value()) == float)
 
-        person_node = ivt['person']
+        person_node, _ = ivt['person']
         assert(person_node.kind() == 'Map')
         rebuild = [ kv.kv() for kv in person_node ]
         rebuild = { k.value(): v.value() for k,v in rebuild }
