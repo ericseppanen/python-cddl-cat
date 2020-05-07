@@ -103,9 +103,17 @@ impl IVTNode {
             Rule(r) => Ok(r.name.to_object(py)),
             Unwrap(r) => Ok(r.name.to_object(py)),
             Occur(o) => Ok(o.symbol().to_object(py)),
-            //KeyValue(kv) => ???
             //Range(_) => ???
             _ => Err(PyErr::new::<AttributeError, _>(())),
+        }
+    }
+
+    // For Occur nodes, retrieve the inner node
+    fn child(&self) -> PyResult<IVTNode> {
+        if let Node::Occur(o) = &self.node {
+            Ok(IVTNode::from((*o.node).clone()))
+        } else {
+            Err(PyErr::new::<AttributeError, _>(()))
         }
     }
 
